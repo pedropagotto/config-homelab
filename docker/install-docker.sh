@@ -5,20 +5,23 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-REAL_USER=${LOGNAME:-$SUDO_USER}
+echo "=================================================="
+echo "Optimized Home Lab Setup on Debian"
+echo "=================================================="
+read -p "Enter the username you want to enable Docker for: " REAL_USER
 
-if [ "$REAL_USER" = "root" ]; then
-  REAL_USER=$(ls /home | head -n 1)
+if [ -z "$REAL_USER" ]; then
+  echo "Username cannot be empty. Exiting."
+  exit 1
 fi
 
-echo "=================================================="
-echo "Starting Optimized Home Lab Setup on Debian"
-echo "Common user detected for permissions: $REAL_USER"
-echo "=================================================="
+echo "--------------------------------------------------"
+echo "Proceeding with configuration for user: $REAL_USER"
+echo "--------------------------------------------------"
 
 apt update && apt install sudo ca-certificates curl gnupg lsb-release -y
 
-usermod -aG sudo "$REAL_USER"
+/usr/sbin/usermod -aG sudo "$REAL_USER"
 
 mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
@@ -29,11 +32,11 @@ echo \
 
 apt update && apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 
-systemctl daemon-reload
-systemctl enable docker.service
-systemctl enable containerd.service
+/bin/systemctl daemon-reload
+/bin/systemctl enable docker.service
+/bin/systemctl enable containerd.service
 
-usermod -aG docker "$REAL_USER"
+/usr/sbin/usermod -aG docker "$REAL_USER"
 
 echo "=================================================="
 echo "Installation completed successfully!"
@@ -42,4 +45,4 @@ echo "After rebooting, log in via SSH with your common user and use 'sudo'."
 echo "=================================================="
 
 sleep 5
-reboot
+/bin/systemctl reboot
